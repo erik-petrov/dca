@@ -194,25 +194,25 @@ func (e *EncodeSession) run() {
 		e.options = StdEncodeOptions
 	}
 
-	vbrStr := "on"
+	/*vbrStr := "on"
 	if !e.options.VBR {
 		vbrStr = "off"
-	}
+	}*/
 
 	// Launch ffmpeg with a variety of different fruits and goodies mixed togheter
 	args := []string{
 		"-stats",
-		"-i", inFile,
 		"-reconnect", "1",
 		"-reconnect_at_eof", "1",
 		"-reconnect_streamed", "1",
-		"-reconnect_delay_max", "2",
+		"-reconnect_delay_max", "5",
+		"-i", inFile,
 		"-map", "0:a",
 		"-acodec", "libopus",
 		"-f", "ogg",
-		"-vbr", vbrStr,
+		//"-vbr", vbrStr,
 		"-compression_level", strconv.Itoa(e.options.CompressionLevel),
-		"-vol", strconv.Itoa(e.options.Volume),
+		//"-vol", strconv.Itoa(e.options.Volume),
 		"-ar", strconv.Itoa(e.options.FrameRate),
 		"-ac", strconv.Itoa(e.options.Channels),
 		"-b:a", strconv.Itoa(e.options.Bitrate * 1000),
@@ -475,10 +475,7 @@ func (e *EncodeSession) handleStderrLine(line string) {
 	var bitrate float32
 	var speed float32
 
-	_, err := fmt.Sscanf(line, "size=%dkB time=%d:%d:%f bitrate=%fkbits/s speed=%fx", &size, &timeH, &timeM, &timeS, &bitrate, &speed)
-	if err != nil {
-		logln("Error parsing ffmpeg stats:", err)
-	}
+	//fmt.Printf(line, "size=%dkB time=%d:%d:%f bitrate=%fkbits/s speed=%fx", &size, &timeH, &timeM, &timeS, &bitrate, &speed)
 
 	dur := time.Duration(timeH) * time.Hour
 	dur += time.Duration(timeM) * time.Minute

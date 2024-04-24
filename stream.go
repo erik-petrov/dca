@@ -2,10 +2,11 @@ package dca
 
 import (
 	"errors"
-	"github.com/bwmarrin/discordgo"
 	"io"
 	"sync"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
@@ -23,6 +24,7 @@ type StreamingSession struct {
 	source OpusReader
 	vc     *discordgo.VoiceConnection
 
+	repeat     bool
 	paused     bool
 	framesSent int
 
@@ -88,7 +90,11 @@ func (s *StreamingSession) stream() {
 			}
 
 			s.Unlock()
-			break
+			if !s.repeat {
+				break
+			} else {
+
+			}
 		}
 	}
 }
@@ -115,6 +121,15 @@ func (s *StreamingSession) readNext() error {
 	s.Unlock()
 
 	return nil
+}
+
+// Paused returns wether the sream is paused or not
+func (s *StreamingSession) Paused() bool {
+	s.Lock()
+	p := s.paused
+	s.Unlock()
+
+	return p
 }
 
 // SetPaused provides pause/unpause functionality
@@ -165,6 +180,13 @@ func (s *StreamingSession) PlaybackPosition() time.Duration {
 	return dur
 }
 
+func (s *StreamingSession) SetPlaybackPosition(time time.Duration) {
+	s.Lock()
+	frame := int(time * s.source.FrameDuration())
+	s.framesSent = frame
+	s.Unlock()
+}
+
 // Finished returns wether the stream finished or not, and any error that caused it to stop
 func (s *StreamingSession) Finished() (bool, error) {
 	s.Lock()
@@ -175,11 +197,29 @@ func (s *StreamingSession) Finished() (bool, error) {
 	return fin, err
 }
 
-// Paused returns wether the sream is paused or not
-func (s *StreamingSession) Paused() bool {
+// Stop current stream from playing more music
+func (s *StreamingSession) SetFinished() {
 	s.Lock()
-	p := s.paused
-	s.Unlock()
 
-	return p
+	if s.finished {
+		s.Unlock()
+		return
+	}
+
+	s.finished = true
+
+	s.Unlock()
+}
+
+func (s *StreamingSession) SetRepeat() {
+	s.Lock()
+
+	if s.finished || !s.running {
+		s.Unlock()
+		return
+	}
+
+	s.repeat = !s.repeat
+
+	s.Unlock()
 }
