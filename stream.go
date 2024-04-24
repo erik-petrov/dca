@@ -25,6 +25,7 @@ type StreamingSession struct {
 	vc     *discordgo.VoiceConnection
 
 	repeat     bool
+	end        bool //lol, i hate this but let it be
 	paused     bool
 	framesSent int
 
@@ -68,12 +69,21 @@ func (s *StreamingSession) stream() {
 
 	for {
 		s.Lock()
+
 		if s.paused {
 			s.Unlock()
 			return
 		}
-		s.Unlock()
 
+		if s.end {
+			s.end = false
+			s.running = false
+			s.repeat = false
+			s.Unlock()
+			return
+		}
+
+		s.Unlock()
 		err := s.readNext()
 		if err != nil {
 			s.Lock()
@@ -91,9 +101,11 @@ func (s *StreamingSession) stream() {
 
 			s.Unlock()
 			if !s.repeat {
+				s.repeat = false
 				break
 			} else {
-
+				s.framesSent = 0
+				s.SetPlaybackPosition(0)
 			}
 		}
 	}
@@ -206,7 +218,7 @@ func (s *StreamingSession) SetFinished() {
 		return
 	}
 
-	s.finished = true
+	s.end = true
 
 	s.Unlock()
 }
