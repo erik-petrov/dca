@@ -226,7 +226,7 @@ func (s *StreamingSession) Repeat() bool {
 	return repeat
 }
 
-func (s *StreamingSession) SetRepeat() {
+func (s *StreamingSession) SetRepeat(repeat bool) {
 	s.Lock()
 
 	if s.finished || !s.running {
@@ -234,7 +234,7 @@ func (s *StreamingSession) SetRepeat() {
 		return
 	}
 
-	s.repeat = !s.repeat
+	s.repeat = repeat
 
 	s.Unlock()
 }
