@@ -211,6 +211,21 @@ func (s *StreamingSession) SetFinished() {
 	s.Unlock()
 }
 
+// checks if the stream is repeating
+func (s *StreamingSession) Repeat() bool {
+	s.Lock()
+
+	if s.finished || !s.running {
+		s.Unlock()
+		return false
+	}
+
+	repeat := s.repeat
+
+	s.Unlock()
+	return repeat
+}
+
 func (s *StreamingSession) SetRepeat() {
 	s.Lock()
 
